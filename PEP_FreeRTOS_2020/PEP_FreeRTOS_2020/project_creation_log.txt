@@ -1,0 +1,146 @@
+New "Silicon Labs MCU Project"
+----------------------------------------------------------------------------------------------------
+
+ - Boards: EFM32 Giant Gecko Starter Kit board (BRD2200A Rev A03)
+ - Part: EFM32GG990F1024
+ - SDK: Gecko SDK Suite: MCU 5.9.2.0 (v2.7.2)
+ - Project type: Empty C Program
+ - Project name: PEP_FreeRTOS_2020
+ - With project files: Link SDK and copy project sources
+
+
+Adding, removing files and directories
+----------------------------------------------------------------------------------------------------
+
+Adding further "emlib" sources to the project:
+ - em_assert.c (Assertion handling)
+ - em_cmu.c    (Clock Management Unit)
+ - em_core.c   (Core interrupt handling)
+ - em_emu.c    (Energy Management Unit)
+ - em_gpio.c   (General Purpose I/O)
+ - em_rtc.c    (Real Time Counter)
+ - em_usart.c  (Universal Synchronous/Asynchronous Receiver/Transmitter)
+ - Notes:
+   - Adding method: link to project (relative to STUDIO_SDK_LOC)
+   - "em_system.c" has been added to the project by default upon project creation
+   - The easiest way to locate other "emlib" files is to right click on "em_system.c"
+     and select "Browse files here" (assuming the project has been created with either
+     "Link SDK and copy project sources" or "Link to sources" option selected).
+     Then drag & drop the selected files.
+
+Creating directory: [drivers]
+
+Adding sources to [drivers]:
+ - udelay.c         (Microsecond delay routine)
+ - retargetio.c     (Provides common STDIO retargetting code)
+ - retargetserial.c (Provides USART specific STDIO retargetting code)
+ - Notes:
+   - Adding method: link to project (relative to STUDIO_SDK_LOC)
+   - The easiest way to locate the "driver" files is to locate the "emlib" files first (see notes
+     above), then change the end of the path as follows:
+     ...\platform\emlib\src
+     ...\hardware\kit\common\drivers
+
+Creating directory: [BSP] (Board Support Package)
+
+Adding sources to [BSP]:
+ - bsp_stk_leds.c (For the LEDs on the starter kit)
+ - Notes:
+   - Adding method: link to project (relative to STUDIO_SDK_LOC)
+   - The easiest way to locate the "BSP" files is to locate the "emlib" files first (see notes
+     above), then change the end of the path as follows:
+     ...\platform\emlib\src
+     ...\hardware\kit\common\bsp
+
+Adding extra sources to [BSP]:
+ - bsp_stk_buttons.c (For the push buttons on the starter kit)
+ - bsp_stk_buttons.h (For the push buttons on the starter kit)
+ - Notes:
+   - Adding method: copy files
+   - For some reason, the official SDK has no BSP sources to handle the push buttons
+     on the starter kit. These files have been created by me (taking the BSP sources
+     for LEDs as guide). As a consequence, these files are NOT part of the official SDK!
+
+Creating directory: [FreeRTOS]
+
+Adding source files under [FreeRTOS]:
+ - Version: 10.3.1 (released on: Feb 18, 2020)
+ - Downloaded from: https://github.com/FreeRTOS/FreeRTOS-Kernel (we need just the kernel)
+ - The latest commit incorporated in the downloaded package:
+   c246922ea10cd9c482a74357baf20ee605b096b1 (Feb 19, 2020)
+ - Inside the [portable] directory the only compiler specific directory extracted is [GCC]
+   (as we use GCC as the compiler). And the only architecture specific directory inside [GCC]
+   is [ARM_CM3], as the microcontroller on the starter kit incorporates an ARM Cortex-M3 CPU.
+   (There is also an [ARM_CM3_MPU] directory under [GCC] in the downloaded archive, but we do not
+   want to use the MPU.)
+ - The [MemMang] directory inside [portable] is common for all compilers and architectures.
+   (There is also a [Common] directory under [portable] in the downloaded archive, but the only file
+   there is "mpu_wrappers.c". As we do not want to use the MPU, we skipped this directory.)
+ - All the other files have been extracted (even though we won't use all FreeRTOS functionalities
+   during the laboratory).
+   
+Changes regarding directory [src]:
+ - Directory has been renamed to [application]
+ - Deleted "main.c" (generated upon project creation)
+ - Created subdirectories: [templates] and [solutions]
+ - Added the following application source files to [templates] and to [solutions]
+   (skeleton versions to [templates], final versions to [solutions]):
+      01_hello_world.c
+      02_suspend-resume.c
+      03_time_delay.c
+      04_time-slicing.c
+      05_semaphore.c
+      06_queue.c
+      07_shared_resources.c
+      08_priority_inversion.c
+      09_software_timers.c
+      10_interrupts.c
+      11_event_flags.c
+      12_task_notifications.c
+      13_stack_overflow.c
+      14_idle_hook.c
+ - Added "master.c" (this source can include any of the above, but only one at a time)
+ - Removed [solutions] from the public version
+   
+Added "FreeRTOSConfig.h" under the project root directory. (This header is based upon a sample
+header for a demo application, and has been tailored to the needs of this laboratory.)
+
+
+Excluding some files from build
+----------------------------------------------------------------------------------------------------
+
+- Directories [templates] and [solutions] have been excluded from build. Only "master.c" will be 
+  compiled directly. As "master.c" includes one (and only one) application source, eventually one of
+  the sources will be compiled in an indirect way. This method makes it possible to quickly change 
+  between the sources with a little modification of "master.c". An other method could be to have one
+  and only one source included into the build, and if we want to change the current template, we 
+  would need to exclude the current source from the build and include an other into the build. This 
+  would be more tedious. 
+  
+- Excluded all but "heap_2.c" heap implementations under [FreeRTOS/portable/MemMang]. Only one
+  FreeRTOS heap implementation can be compiled during a build. We selected the second simplest
+  method. "heap_1.c" is simpler, but does not provide a free function (which is required by
+  "vTaskDelete()" in "01_hello_world.c".
+
+
+Adding directories to the include path
+----------------------------------------------------------------------------------------------------
+
+All the path entries below have been added as workspace relative path, for all languages (C and 
+assembly), for all configurations (Debug and Release). Further more, instead of hard coding the
+name of the directory containing the project, we used the variable ${ProjName}:
+
+/${ProjName}  (for "FreeRTOSConfig.h")
+/${ProjName}/BSP  (for "bst_stk_buttons.h")
+/${ProjName}/FreeRTOS/include  (for general FreeRTOS headers)
+/${ProjName}/FreeRTOS/portable/GCC/ARM_CM3  (for the compiler + architecture specific "portmacro.h")
+
+
+Adding predefined symbols
+----------------------------------------------------------------------------------------------------
+
+All the entries below have been added for all languages (C and assembly), for all configurations
+(Debug and Release).
+
+RETARGET_VCOM (no value, just defined) --> (used in "retargetserialconfig.h" to select UART0 as the 
+serial interface, and to enable forwarding UART0 communication over the debug USB connection)
